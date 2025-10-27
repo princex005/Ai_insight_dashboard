@@ -1,0 +1,4 @@
+:root { --card-radius: 16px; }
+.block-container { padding-top: 1.2rem; }
+.stMetric { background: rgba(255,255,255,0.04); padding: 10px 12px; border-radius: var(--card-radius); }
+.stTabs [data-baseweb="tab-list"] { border-radius: var(--card-radius); }
