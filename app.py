@@ -106,29 +106,33 @@ with st.expander("Column types & basic stats"):
     st.write(df.isna().sum())
 
 # -------------------------------
-# Build figures from prompt (AI if available, else heuristics via build_figures)
+# Build figures from prompt (supports multiple instructions)
 # -------------------------------
 effective_prompt = (prompt or "").strip() or "show total of first numeric column by first category"
-figs = build_figures(df, effective_prompt)
 
-if not figs:
-    st.warning(
-        "I couldn't infer a chart from the prompt. Try mentioning columns or chart types "
-        "like 'bar', 'line', 'scatter', 'histogram', 'box', or 'heatmap'."
-    )
+# ✅ Supports multiple instructions separated by ';'
+subprompts = [p.strip() for p in effective_prompt.split(";") if p.strip()]
+
+all_figs = []
+for p in subprompts:
+    figs = build_figures(df, p)
+    all_figs.extend(figs)
+
+if not all_figs:
+    st.warning("I couldn't infer a chart from the prompt. Try simpler phrases like 'bar age by gender', 'histogram age', or 'heatmap mutual_funds by gender x purpose'.")
 else:
     st.subheader("Dashboard")
-    for item in figs:
+    for item in all_figs:
         st.plotly_chart(item["fig"], use_container_width=True)
 
 # -------------------------------
-# Export report
+# Export report (fixed variable reference)
 # -------------------------------
 if export_button:
-    if not figs:
+    if not all_figs:
         st.error("No charts to export. Provide a prompt and ensure charts are visible first.")
     else:
-        out = export_html(figs, "ai_insight_report.html", title="AI Insight Report")
+        out = export_html(all_figs, "ai_insight_report.html", title="AI Insight Report")
         with open(out, "rb") as f:
             st.download_button(
                 "Download report",
@@ -144,4 +148,5 @@ if export_button:
 st.markdown("---")
 st.write("💡 **Tips**:")
 st.write("- Try prompts like: 'line chart revenue over time', 'histogram of order_value', 'box profit by region', 'heatmap product x region'.")
+st.write("- You can now type multiple instructions separated by ';' like 'bar sales by region; line profit over month'.")
 st.write("- If your dates are strings, the app will try to parse them automatically.")
