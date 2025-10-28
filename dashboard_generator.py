@@ -1,4 +1,4 @@
-# dashboard_generator.py — safe ASCII version (pie + mean/avg + clean styling)
+# dashboard_generator.py — Pro visuals + mean/avg + pie + smart aggregation
 
 from typing import List, Dict, Any
 import re
@@ -7,10 +7,6 @@ import plotly.express as px
 import jinja2
 
 from utils import infer_column_types
-
-# ------------------------------
-# Helpers: parsing + styling
-# ------------------------------
 
 COLORWAY = [
     "#7C83FD", "#5EEAD4", "#F59E0B", "#60A5FA", "#34D399",
@@ -41,16 +37,11 @@ def guess_chart_type(prompt: str) -> str:
     return "bar"
 
 def extract_columns(prompt: str, df: pd.DataFrame) -> List[str]:
-    """
-    Return columns explicitly mentioned in the prompt.
-    If none mentioned, fallback to [num,num,cat] or [num,cat] or [cat,cat].
-    """
     p = (prompt or "").lower()
     cols: List[str] = []
     for c in df.columns:
         if re.search(r"\b" + re.escape(str(c).lower()) + r"\b", p):
             cols.append(c)
-
     if cols:
         return cols[:3]
 
@@ -88,10 +79,6 @@ def format_y_ticks(fig, series: pd.Series):
     elif pd.api.types.is_float_dtype(series):
         fig.update_yaxes(tickformat=",.2f")
 
-# ------------------------------
-# Main: build_figures
-# ------------------------------
-
 def build_figures(df: pd.DataFrame, prompt: str) -> List[Dict[str, Any]]:
     figures: List[Dict[str, Any]] = []
     p = (prompt or "").lower()
@@ -102,7 +89,6 @@ def build_figures(df: pd.DataFrame, prompt: str) -> List[Dict[str, Any]]:
     use_mean = want_mean(prompt)
 
     if chart_type == "line":
-        # prefer datetime on x
         x = dts[0] if dts else (cols[0] if cols else None)
         y = numerics[0] if numerics else (cols[1] if len(cols) > 1 else None)
         if x is not None and y is not None:
@@ -174,7 +160,6 @@ def build_figures(df: pd.DataFrame, prompt: str) -> List[Dict[str, Any]]:
             format_y_ticks(fig, df[numerics[0]])
             figures.append({"title": fig.layout.title.text, "fig": style_fig(fig)})
 
-    # Optional extra totals bar when user mentions total/sum/aggregate
     if (("total" in p) or ("sum" in p) or ("aggregate" in p)) and len(df.columns) >= 2:
         if cats and numerics:
             x2, y2 = cats[0], numerics[0]
@@ -184,10 +169,6 @@ def build_figures(df: pd.DataFrame, prompt: str) -> List[Dict[str, Any]]:
             figures.append({"title": fig2.layout.title.text, "fig": style_fig(fig2)})
 
     return figures
-
-# ------------------------------
-# Export: static HTML report
-# ------------------------------
 
 def export_html(figs: List[Dict[str, Any]], outfile: str, title: str = "AI Insight Report"):
     template = jinja2.Template("""
