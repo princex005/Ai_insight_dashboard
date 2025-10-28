@@ -6,3 +6,7 @@ openpyxl==3.1.5
 python-dateutil==2.9.0.post0
 jinja2==3.1.4
 openai>=1.0.0,<2
+
+# Forecasting (used by quick_forecast). If this ever fails to build on your host,
+# simply remove this line and the app will fall back to a simple moving-average forecast.
+prophet==1.1.5
