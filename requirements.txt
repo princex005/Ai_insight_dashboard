@@ -6,4 +6,4 @@ openpyxl==3.1.5
 python-dateutil==2.9.0.post0
 jinja2==3.1.4
 openai>=1.0.0,<2
-prophet==1.1.5   # if deploy fails on this line, delete it and redeploy (fallback is built-in)
+  # if deploy fails on this line, delete it and redeploy (fallback is built-in)
